@@ -1,0 +1,22 @@
+#!/bin/bash
+# .git/hooks/prepare-commit-msg
+
+COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2
+
+if [ -z "$COMMIT_SOURCE" ] || [ "$COMMIT_SOURCE" = "message" ]; then
+    CURRENT_INDEX=$(git config --local --get commit.index)
+    
+    if [ -z "$CURRENT_INDEX" ]; then
+        # 首次使用，从实际 commit 数初始化
+        CURRENT_INDEX=$(git rev-list --count HEAD 2>/dev/null || echo 0)
+        git config --local commit.index "$CURRENT_INDEX"
+        echo "✓ 已初始化 commit 序号: $CURRENT_INDEX" >&2
+    fi
+    
+    NEXT_INDEX=$((CURRENT_INDEX + 1))
+    git config --local commit.index "$NEXT_INDEX"
+    
+    echo "" >> "$COMMIT_MSG_FILE"
+    echo "commit_index: $NEXT_INDEX" >> "$COMMIT_MSG_FILE"
+fi

@@ -1,0 +1,10 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+[user]
+	name = user2226699209
+	email = 502909681545936-user2226699209@noreply.coze.cn
+[commit]
+	index = 16

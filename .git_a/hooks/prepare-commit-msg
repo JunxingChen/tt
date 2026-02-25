@@ -1,0 +1,39 @@
+#!/bin/bash
+# .git/hooks/prepare-commit-msg
+
+COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2
+
+if [ -z "$COMMIT_SOURCE" ] || [ "$COMMIT_SOURCE" = "message" ]; then
+    # 检查是否是 restore 类型的提交，如果是则跳过
+    if grep -q "^Coze-Commit-Type: restore" "$COMMIT_MSG_FILE"; then
+        exit 0
+    fi
+    
+    CURRENT_INDEX=$(git config --local --get commit.index)
+    
+    if [ -z "$CURRENT_INDEX" ]; then
+        CURRENT_INDEX=$(git rev-list --count HEAD 2>/dev/null || echo 0)
+        git config --local commit.index "$CURRENT_INDEX"
+        echo "✓ 已初始化 commit 序号: $CURRENT_INDEX" >&2
+    fi
+    
+    NEXT_INDEX=$((CURRENT_INDEX + 1))
+    git config --local commit.index "$NEXT_INDEX"
+    
+    # 检查最后一行
+    LAST_LINE=$(tail -n 1 "$COMMIT_MSG_FILE")
+    
+    # 判断是否需要加空行：
+    # 1. 最后一行为空行
+    # 2. 最后一行是 Coze- 开头的 Key: Value 格式
+    if [ -z "$LAST_LINE" ] || echo "$LAST_LINE" | grep -qE "^Coze-[A-Za-z-]+:"; then
+        # 直接追加，不加空行
+        echo "commit_index: $NEXT_INDEX" >> "$COMMIT_MSG_FILE"
+    else
+        # 需要加空行
+        echo "" >> "$COMMIT_MSG_FILE"
+        echo "commit_index: $NEXT_INDEX" >> "$COMMIT_MSG_FILE"
+    fi
+fi
+
